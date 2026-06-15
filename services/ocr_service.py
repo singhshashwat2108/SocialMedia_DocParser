@@ -1,24 +1,50 @@
-import easyocr
+import keras_ocr
 
-reader= easyocr.Reader(['en'], model_storage_directory=r"D:\Deep_learning\Text_Summarizer\Model_cache")
+from models.ocr_word import OCRWord 
 
-def extract_text(image_path:str):
+pipeline = keras_ocr.pipeline.Pipeline()
 
-  result= reader.readtext(image_path, detail=0)
+def extract_layout(
+    image_path: str
+):
 
-  return " ".join(result)
+    image = keras_ocr.tools.read(image_path)
+
+    predictions = pipeline.recognize(
+        [image]
+    )[0]
+
+    words = []
+
+    for text, box in predictions:
+
+        words.append(
+            OCRWord(
+                text=text,
+                bbox=box.tolist()
+            )
+        )
+
+    return words
 
 
-def extract_text_from_images(image_paths: list[str]):
+def extract_layout_from_images(
+    image_paths: list[str]
+):
 
     pages = []
 
     for image_path in image_paths:
 
-        text = extract_text(
+        page_words = extract_layout(
             image_path
         )
 
-        pages.append(text)
+        pages.append(
+            {
+                "image": image_path,
+                "words": page_words
+            }
+        )
 
-    return "\n".join(pages)
+    return pages

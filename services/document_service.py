@@ -1,6 +1,6 @@
 from fastapi import UploadFile
-from services.converter_service import detect_document_type, image_to_images, convert_pdf_to_images
-from services.ocr_service import extract_text, extract_text_from_images
+from services.converter_service import detect_document_type, image_to_images,convert_pdf_to_images
+from services.ocr_service import extract_layout, extract_layout_from_images
 from models.documents_type import DocumentType
 import uuid
 from pathlib import Path
@@ -46,7 +46,7 @@ async def process_document(file: UploadFile):
 
     #text= extract_text(image_paths)                                #EXTRACT TEXT FROM THE SINGLE IMAGE
 
-    text= extract_text_from_images(image_paths)         #STORES A LIST OF RETURNED TEXTS, FOR A LIST OF IMAGE_PATHS
+    layout = extract_layout_from_images(image_paths)       #STORES A LIST OF RETURNED TEXTS, FOR A LIST OF IMAGE_PATHS
 
     return {
         "filename":file.filename,

@@ -1,1 +1,1 @@
-# ImageSummarizer_Transformer
+# DocIntell_Application
