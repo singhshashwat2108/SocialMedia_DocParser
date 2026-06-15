@@ -1,1 +1,0 @@
-# DocIntell_Application
