@@ -46,6 +46,12 @@ async def process_document(file: UploadFile):
 
     #text= extract_text(image_paths)                                #EXTRACT TEXT FROM THE SINGLE IMAGE
 
+
+    # layout = extract_layout_from_images(image_paths)
+
+    # return {
+    #     "layout": layout
+    # }
     layout = extract_layout_from_images(image_paths)       #STORES A LIST OF RETURNED TEXTS, FOR A LIST OF IMAGE_PATHS
 
     return {

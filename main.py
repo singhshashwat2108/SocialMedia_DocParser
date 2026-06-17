@@ -9,4 +9,4 @@ app.include_router(document_router)
 
 @app.get("/")
 def home():
-    return {"message": "Document Processing API"}
+    return {"index.html"}
