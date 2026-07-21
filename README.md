@@ -1,16 +1,16 @@
-<h1 align="center">
+<h1 align="left">
 DocIntell
 </h1>
 
-<h3 align="center">
+<h3 align="left">
 Intelligent Document Processing Platform
 </h3>
 
-<p align="center">
+<p align="left">
 OCR • Document AI • Layout Understanding • LLM Integration • Distributed Systems
 </p>
 
-<p align="center">
+<p align="left">
 
 ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)
