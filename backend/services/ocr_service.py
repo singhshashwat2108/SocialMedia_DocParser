@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 reader = easyocr.Reader(['en'])
 
 MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024
-ALLOWED_IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg"}
+ALLOWED_IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp"}
 
 
 class OCRWord(BaseModel):

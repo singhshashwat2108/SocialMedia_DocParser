@@ -1,7 +1,7 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from services.ai_service import analyze_social_content
+from backend.services.ai_service import analyze_social_content
 
 router = APIRouter(
     prefix="/analyze",
@@ -15,4 +15,9 @@ class AnalyzeRequest(BaseModel):
 
 @router.post("")
 async def analyze_text(request: AnalyzeRequest):
-    return analyze_social_content(request.text)
+    result = analyze_social_content(request.text)
+
+    if not result["success"]:
+        raise HTTPException(status_code=502, detail=result["error"])
+
+    return result["data"]

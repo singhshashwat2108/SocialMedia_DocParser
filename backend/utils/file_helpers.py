@@ -33,7 +33,7 @@ async def detect_document_type(
     elif suffix == ".txt":
         return DocumentType.TXT
 
-    elif suffix in [".png", ".jpg", ".jpeg"]:
+    elif suffix in [".png", ".jpg", ".jpeg", ".webp"]:
         return DocumentType.IMAGE
 
     return DocumentType.UNSUPPORTED

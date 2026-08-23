@@ -1,200 +1,215 @@
-/* ── Scroll reveal ── */
-const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); }), { threshold: 0.06 });
-document.querySelectorAll('.glass-card').forEach(c => io.observe(c));
+const UPLOAD_ENDPOINT = '/documents/upload';
+const ANALYZE_ENDPOINT = '/analyze';
 
-/* ── File handling ── */
-const fileInput  = document.getElementById('file-input');
-const uploadZone = document.getElementById('upload-zone');
-const fileInfoEl = document.getElementById('file-info');
-const btnProcess = document.getElementById('btn-process');
-const pillUpload = document.getElementById('pill-upload');
-let currentFile  = null;
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const ALLOWED_EXTENSIONS = ['.pdf', '.jpg', '.jpeg', '.png', '.webp'];
 
-const fmt = b => b < 1048576 ? (b/1024).toFixed(1)+' KB' : (b/1048576).toFixed(1)+' MB';
-
-function setFile(f) {
-  if (!f) return;
-  currentFile = f;
-  document.getElementById('file-name').textContent = f.name;
-  document.getElementById('file-size').textContent = fmt(f.size);
-  fileInfoEl.classList.add('show');
-  btnProcess.disabled = false;
-  pillUpload.innerHTML = '<span class="pill-dot" style="background:#30D158"></span>Ready';
-  pillUpload.className = 'pill pill-done show';
-}
-
-fileInput.addEventListener('change', () => { if (fileInput.files[0]) setFile(fileInput.files[0]); });
-
-document.getElementById('btn-remove').addEventListener('click', e => {
-  e.stopPropagation();
-  currentFile = null;
-  fileInput.value = '';
-  fileInfoEl.classList.remove('show');
-  btnProcess.disabled = true;
-  pillUpload.innerHTML = '<span class="pill-dot blink"></span>Waiting';
-  pillUpload.className = 'pill pill-wait show';
-});
-
-uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
-uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
-uploadZone.addEventListener('drop', e => {
-  e.preventDefault();
-  uploadZone.classList.remove('dragover');
-  const f = e.dataTransfer.files[0];
-  if (f) { fileInput.files = e.dataTransfer.files; setFile(f); }
-});
-
-/* ── Progress ── */
-function runProgress(label, cb) {
-  const wrap = document.getElementById('prog-wrap');
-  const fill = document.getElementById('prog-fill');
-  const lbl  = document.getElementById('prog-label');
-  const pct  = document.getElementById('prog-pct');
-  lbl.textContent = label;
-  wrap.classList.add('show');
-  fill.style.width = '0%';
-  let v = 0;
-  const iv = setInterval(() => {
-    v += Math.random() * 11 + 5;
-    if (v >= 100) { v = 100; clearInterval(iv); setTimeout(() => { wrap.classList.remove('show'); cb(); }, 260); }
-    fill.style.width = v + '%';
-    pct.textContent = Math.round(v) + '%';
-  }, 100);
-}
-
-/* ── Demo content ── */
-const sumHL = 'Generative AI could automate 60–70% of knowledge work tasks. Workers who adapt see 37% productivity gains — making adaptation the defining organizational choice of this decade.';
-
-const summary = `The document examines how artificial intelligence is transforming knowledge work across industries.
-
-• Large language models are automating tasks in research synthesis, legal discovery, financial analysis, and medical literature review — areas long considered exclusively human.
-
-• Productivity gains for AI-augmented workers average 37%, while many organizations still lack formal adoption strategies.
-
-• AI will not eliminate knowledge worker roles wholesale; it automates specific tasks within roles, requiring workers to evolve toward oversight, judgment, and curation.
-
-• The most effective organizational response is redesigning roles around AI collaboration — editors, analysts, and lawyers who govern AI outputs rather than compete with them.
-
-• Companies that invest in broad AI literacy will compound competitive advantages; those treating AI as a niche IT concern risk structural disadvantage within the decade.`;
-
-const qaAnswers = {
-  default: "Based on the document's content, this appears to be a strategic analysis of AI's impact on knowledge work, covering productivity shifts, organizational adaptation, and the redefinition of professional roles in an AI-augmented environment.",
-  "what is this document about?": "This document is a strategic analysis examining how artificial intelligence — specifically large language models — is reshaping knowledge work. It covers productivity impacts, displacement risks, and how organizations should restructure roles around AI collaboration.",
-  "what are the key conclusions?": "The document concludes that: (1) AI will automate 60–70% of knowledge work tasks but not eliminate jobs wholesale; (2) AI-augmented workers see ~37% productivity gains; (3) organizations should redesign roles around human-AI collaboration rather than treating AI as a threat; (4) companies investing in AI literacy will gain durable competitive advantages.",
-  "who is the intended audience?": "The document is aimed at organizational leaders, strategy executives, and HR decision-makers who are navigating workforce transformation in response to generative AI adoption.",
-  "list the main data points": "Key data points in the document: \n• 60–70% of knowledge work tasks could be automated by generative AI \n• 37% average productivity increase for AI-augmented workers \n• Industries covered: research, legal, financial analysis, and medical literature review \n• Timeframe: structural disadvantage predicted 'within this decade' for laggards"
+const screens = {
+  upload: document.getElementById('screen-upload'),
+  loading: document.getElementById('screen-loading'),
+  error: document.getElementById('screen-error'),
+  results: document.getElementById('screen-results'),
 };
 
-/* ── Process ── */
-btnProcess.addEventListener('click', () => {
-  btnProcess.disabled = true;
-  const cardSummary = document.getElementById('card-summary');
-  const cardQA = document.getElementById('card-qa');
-  cardSummary.classList.add('visible');
-  document.getElementById('pill-sum-proc').classList.add('show');
-
-  runProgress('Analyzing document layout…', () => {
-    document.getElementById('empty-summary').style.display = 'none';
-    const hl = document.getElementById('sum-callout');
-    document.getElementById('sum-hl').textContent = sumHL;
-    hl.classList.add('show');
-    const sel = document.getElementById('text-summary');
-    sel.textContent = summary;
-    sel.classList.add('show');
-    document.getElementById('foot-summary').classList.add('show');
-    document.getElementById('wc-summary').textContent = summary.trim().split(/\s+/).length + ' words';
-    document.getElementById('pill-sum-proc').classList.remove('show');
-    document.getElementById('pill-sum-done').classList.add('show');
-
-    setTimeout(() => {
-      cardQA.classList.add('visible');
-      document.getElementById('qa-locked').style.display = 'none';
-      document.getElementById('qa-suggest').style.display = 'flex';
-      const qaInput = document.getElementById('qa-input');
-      const btnSend = document.getElementById('btn-send');
-      qaInput.disabled = false;
-      btnSend.disabled = false;
-      const pillQA = document.getElementById('pill-qa-ready');
-      pillQA.style.display = 'inline-flex';
-      cardQA.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 500);
-  });
-});
-
-/* ── Q&A ── */
-const qaMessages = document.getElementById('qa-messages');
-
-function addBubble(text, role) {
-  const b = document.createElement('div');
-  b.className = 'bubble ' + (role === 'user' ? 'bubble-user' : 'bubble-ai');
-  b.textContent = text;
-  b.style.opacity = '0';
-  b.style.transform = 'translateY(6px)';
-  b.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
-  qaMessages.appendChild(b);
-  requestAnimationFrame(() => { b.style.opacity = '1'; b.style.transform = 'none'; });
-  qaMessages.scrollTop = qaMessages.scrollHeight;
-  return b;
+function showScreen(name) {
+  Object.values(screens).forEach((el) => { el.hidden = true; });
+  screens[name].hidden = false;
 }
 
-function addTyping() {
-  const b = document.createElement('div');
-  b.className = 'bubble bubble-ai bubble-typing';
-  b.id = 'typing-bubble';
-  b.innerHTML = '<span></span><span></span><span></span>';
-  qaMessages.appendChild(b);
-  qaMessages.scrollTop = qaMessages.scrollHeight;
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('file-input');
+const fileChosen = document.getElementById('file-chosen');
+const fileChosenName = document.getElementById('file-chosen-name');
+const uploadError = document.getElementById('upload-error');
+const btnAnalyze = document.getElementById('btn-analyze');
+const btnClear = document.getElementById('btn-clear');
+const btnRetry = document.getElementById('btn-retry');
+const btnReset = document.getElementById('btn-reset');
+const btnCopy = document.getElementById('btn-copy');
+const errorMessageEl = document.getElementById('error-message');
+
+const step1 = document.getElementById('step-1');
+const step2 = document.getElementById('step-2');
+const step3 = document.getElementById('step-3');
+
+let selectedFile = null;
+
+function extensionOf(filename) {
+  const idx = filename.lastIndexOf('.');
+  return idx === -1 ? '' : filename.slice(idx).toLowerCase();
 }
 
-function removeTyping() {
-  const t = document.getElementById('typing-bubble');
-  if (t) t.remove();
+function showUploadError(message) {
+  uploadError.textContent = message;
+  uploadError.hidden = false;
 }
 
-function sendQuestion(q) {
-  if (!q.trim()) return;
-  document.getElementById('qa-suggest').style.display = 'none';
-  addBubble(q, 'user');
-  addTyping();
-  const key = q.toLowerCase().trim();
-  const answer = qaAnswers[key] || qaAnswers.default;
-  setTimeout(() => {
-    removeTyping();
-    addBubble(answer, 'ai');
-  }, 900 + Math.random() * 600);
+function clearUploadError() {
+  uploadError.hidden = true;
+  uploadError.textContent = '';
 }
 
-document.getElementById('btn-send').addEventListener('click', () => {
-  const inp = document.getElementById('qa-input');
-  const val = inp.value.trim();
-  if (!val) return;
-  inp.value = '';
-  inp.style.height = '';
-  sendQuestion(val);
-});
+function resetFileSelection() {
+  selectedFile = null;
+  fileInput.value = '';
+  fileChosen.hidden = true;
+  btnAnalyze.disabled = true;
+}
 
-document.getElementById('qa-input').addEventListener('keydown', e => {
-  if (e.key === 'Enter' && !e.shiftKey) {
+function setFile(file) {
+  clearUploadError();
+
+  if (!ALLOWED_EXTENSIONS.includes(extensionOf(file.name))) {
+    resetFileSelection();
+    showUploadError('Unsupported file type. Please upload a PDF, JPG, PNG, or WEBP file.');
+    return;
+  }
+
+  if (file.size > MAX_FILE_SIZE) {
+    resetFileSelection();
+    showUploadError('File is too large. Maximum size is 10MB.');
+    return;
+  }
+
+  selectedFile = file;
+  fileChosenName.textContent = file.name;
+  fileChosen.hidden = false;
+  btnAnalyze.disabled = false;
+}
+
+dropzone.addEventListener('click', () => fileInput.click());
+dropzone.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' || e.key === ' ') {
     e.preventDefault();
-    document.getElementById('btn-send').click();
+    fileInput.click();
   }
 });
 
-document.getElementById('qa-input').addEventListener('input', function() {
-  this.style.height = 'auto';
-  this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+dropzone.addEventListener('dragover', (e) => {
+  e.preventDefault();
+  dropzone.classList.add('dragover');
 });
 
-function askChip(el) {
-  sendQuestion(el.textContent);
+dropzone.addEventListener('dragleave', () => {
+  dropzone.classList.remove('dragover');
+});
+
+dropzone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dropzone.classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (file) setFile(file);
+});
+
+fileInput.addEventListener('change', () => {
+  if (fileInput.files[0]) setFile(fileInput.files[0]);
+});
+
+btnClear.addEventListener('click', () => {
+  resetFileSelection();
+  clearUploadError();
+});
+
+function setStep(stepEl, state) {
+  stepEl.classList.remove('step-active', 'step-done');
+  if (state) stepEl.classList.add(state);
 }
 
-/* ── Copy ── */
-function copyEl(id, btn) {
-  navigator.clipboard.writeText(document.getElementById(id).textContent).then(() => {
-    const orig = btn.innerHTML;
-    btn.innerHTML = '✓ Copied';
-    btn.style.color = '#30D158';
-    setTimeout(() => { btn.innerHTML = orig; btn.style.color = ''; }, 1800);
-  });
+function resetSteps() {
+  [step1, step2, step3].forEach((s) => setStep(s, null));
 }
+
+async function extractErrorMessage(response) {
+  try {
+    const body = await response.json();
+    return body.detail || body.error || `Request failed with status ${response.status}`;
+  } catch (_err) {
+    return `Request failed with status ${response.status}`;
+  }
+}
+
+async function runAnalysis() {
+  if (!selectedFile) return;
+
+  showScreen('loading');
+  resetSteps();
+  setStep(step1, 'step-active');
+
+  try {
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+
+    const uploadResponse = await fetch(UPLOAD_ENDPOINT, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!uploadResponse.ok) {
+      throw new Error(await extractErrorMessage(uploadResponse));
+    }
+
+    setStep(step1, 'step-done');
+    setStep(step2, 'step-active');
+
+    const uploadData = await uploadResponse.json();
+    const extractedText = uploadData.text || '';
+
+    setStep(step2, 'step-done');
+    setStep(step3, 'step-active');
+
+    const analyzeResponse = await fetch(ANALYZE_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: extractedText }),
+    });
+
+    if (!analyzeResponse.ok) {
+      throw new Error(await extractErrorMessage(analyzeResponse));
+    }
+
+    const analysis = await analyzeResponse.json();
+    setStep(step3, 'step-done');
+
+    renderResults(extractedText, analysis);
+    showScreen('results');
+  } catch (err) {
+    errorMessageEl.textContent = 'Something went wrong. Try again.';
+    showScreen('error');
+  }
+}
+
+function renderResults(text, analysis) {
+  document.getElementById('result-text').textContent = text.trim() || '(No text extracted)';
+  document.getElementById('result-score').textContent = analysis.engagement_score ?? '–';
+  document.getElementById('result-tone').textContent = analysis.tone || '–';
+
+  const list = document.getElementById('result-suggestions');
+  list.innerHTML = '';
+  (analysis.suggestions || []).forEach((suggestion) => {
+    const li = document.createElement('li');
+    li.textContent = suggestion;
+    list.appendChild(li);
+  });
+
+  document.getElementById('result-improved').textContent = analysis.improved_version || '';
+}
+
+btnAnalyze.addEventListener('click', runAnalysis);
+btnRetry.addEventListener('click', runAnalysis);
+
+btnCopy.addEventListener('click', () => {
+  const text = document.getElementById('result-improved').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const original = btnCopy.textContent;
+    btnCopy.textContent = 'Copied!';
+    setTimeout(() => { btnCopy.textContent = original; }, 1500);
+  });
+});
+
+btnReset.addEventListener('click', () => {
+  resetFileSelection();
+  clearUploadError();
+  showScreen('upload');
+});
+
+showScreen('upload');

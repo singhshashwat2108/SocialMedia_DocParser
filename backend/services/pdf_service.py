@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 IMAGE_DIR = Path("converted_images")
 MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024
-ALLOWED_IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg"}
+ALLOWED_IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp"}
 ALLOWED_PDF_EXTENSIONS = {".pdf"}
 
 

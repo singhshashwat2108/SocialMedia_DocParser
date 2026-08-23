@@ -3,210 +3,137 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DocDistill — Document Intelligence</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <title>Social Media Content Analyzer</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-<!-- AMBIENT BACKGROUND -->
-<div class="orb-field" aria-hidden="true">
-  <div class="orb orb-1"></div>
-  <div class="orb orb-2"></div>
-  <div class="orb orb-3"></div>
-</div>
-
-<!-- NAV -->
-<nav>
-  <div class="nav-inner">
-    <a class="logo" href="#">
-      <div class="logo-mark">
-        <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-          <path d="M3 3h4v4H3zM9 3h4v4H9zM3 9h4v4H3zM11 9v6M8 12h6" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
+  <div class="app">
+    <header class="app-header">
+      <div class="logo">
+        <span class="logo-mark">S</span>
+        <span class="logo-text">Social Media Content Analyzer</span>
       </div>
-      DocDistill
-    </a>
-    <span class="nav-badge">LayoutLMv3 · Document Intelligence</span>
-  </div>
-</nav>
+      <p class="app-subtitle">Upload a post screenshot or PDF and get an instant AI engagement analysis.</p>
+    </header>
 
-<!-- HERO -->
-<header class="hero">
-  <div class="hero-eyebrow">
-    <span class="hero-eyebrow-dot"></span>
-    Powered by LayoutLMv3
-  </div>
-  <h1>Understand any<br /><span class="grad">document instantly.</span></h1>
-  <p class="hero-sub">Upload a document. Get a precise summary and ask anything about its contents — powered by Microsoft's LayoutLMv3 transformer.</p>
-  <div class="hero-pills">
-    <div class="tech-pill"><span class="tech-pill-dot" style="background:var(--indigo)"></span>LayoutLMv3</div>
-    <div class="tech-pill"><span class="tech-pill-dot" style="background:var(--blue)"></span>OCR + Layout Parsing</div>
-    <div class="tech-pill"><span class="tech-pill-dot" style="background:var(--teal)"></span>Semantic Q&A</div>
-    <div class="tech-pill"><span class="tech-pill-dot" style="background:var(--green)"></span>No account needed</div>
-  </div>
-</header>
+    <main class="app-main">
 
-<!-- MAIN -->
-<main>
-
-  <!-- CARD 1: UPLOAD -->
-  <div class="glass-card visible" id="card-upload">
-    <div class="card-header">
-      <div class="card-icon icon-indigo">
-        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#5E5CE6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
-        </svg>
-      </div>
-      <div>
-        <div class="card-title">Upload document</div>
-        <div class="card-desc">PDF, DOCX, TXT · up to 20 MB</div>
-      </div>
-      <span class="pill pill-wait show" id="pill-upload"><span class="pill-dot blink"></span>Waiting</span>
-    </div>
-    <div class="card-body">
-      <div class="upload-zone" id="upload-zone">
-        <input type="file" id="file-input" accept=".pdf,.doc,.docx,.txt,.md" />
-        <div class="upload-icon-wrap">
-          <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#5E5CE6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>
-            <line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/>
-          </svg>
+      <!-- UPLOAD SCREEN -->
+      <section id="screen-upload" class="screen">
+        <div id="dropzone" class="dropzone" tabindex="0">
+          <input type="file" id="file-input" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/png,image/jpeg,image/webp" hidden />
+          <div class="dropzone-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
+          </div>
+          <p class="dropzone-text">Drop your PDF or image here, or <span class="dropzone-link">click to browse</span></p>
+          <p class="dropzone-hint">PDF, JPG, PNG, WEBP · up to 10MB</p>
         </div>
-        <h3>Drop your file here</h3>
-        <p>or click to browse</p>
-        <button class="btn btn-indigo" tabindex="-1" style="pointer-events:none; font-size:13px;">Choose file</button>
-        <div class="file-tags">
-          <span class="ftag">PDF</span>
-          <span class="ftag">DOCX</span>
-          <span class="ftag">TXT</span>
-          <span class="ftag">MD</span>
-        </div>
-      </div>
 
-      <div class="file-info" id="file-info">
-        <div class="file-icon">
-          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#0A84FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>
-          </svg>
+        <div id="file-chosen" class="file-chosen" hidden>
+          <div class="file-chosen-info">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+            </svg>
+            <span id="file-chosen-name" class="file-chosen-name"></span>
+          </div>
+          <div class="file-chosen-actions">
+            <button id="btn-clear" class="btn-icon" type="button" title="Remove file" aria-label="Remove file">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          </div>
         </div>
-        <div class="file-meta">
-          <strong id="file-name">—</strong>
-          <span id="file-size">—</span>
-        </div>
-        <button class="btn-x" id="btn-remove" title="Remove">
-          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
-            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-          </svg>
-        </button>
-      </div>
 
-      <div class="progress-wrap" id="prog-wrap">
-        <div class="prog-head">
-          <span id="prog-label">Processing…</span>
-          <span id="prog-pct">0%</span>
-        </div>
-        <div class="track"><div class="fill" id="prog-fill"></div></div>
-      </div>
+        <p id="upload-error" class="error-text" hidden></p>
 
-      <div class="step-actions">
-        <button class="btn btn-indigo" id="btn-process" disabled>
-          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+        <button id="btn-analyze" class="btn btn-primary btn-block" type="button" disabled>Analyze</button>
+      </section>
+
+      <!-- LOADING SCREEN -->
+      <section id="screen-loading" class="screen" hidden>
+        <div class="status-card">
+          <div class="spinner" aria-hidden="true"></div>
+          <ul class="steps">
+            <li id="step-1" class="step">
+              <span class="step-marker"></span>
+              <span class="step-label">Uploading file...</span>
+            </li>
+            <li id="step-2" class="step">
+              <span class="step-marker"></span>
+              <span class="step-label">Extracting text...</span>
+            </li>
+            <li id="step-3" class="step">
+              <span class="step-marker"></span>
+              <span class="step-label">Analyzing engagement...</span>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ERROR SCREEN -->
+      <section id="screen-error" class="screen" hidden>
+        <div class="status-card error-card">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
           </svg>
-          Analyze document
-        </button>
-      </div>
-    </div>
+          <p id="error-message">Something went wrong. Try again.</p>
+          <button id="btn-retry" class="btn btn-primary" type="button">Retry</button>
+        </div>
+      </section>
+
+      <!-- RESULTS SCREEN -->
+      <section id="screen-results" class="screen" hidden>
+        <div class="results-grid">
+
+          <div class="card card-text">
+            <h2 class="card-title">Extracted text</h2>
+            <div id="result-text" class="scroll-box"></div>
+          </div>
+
+          <div class="card card-score">
+            <h2 class="card-title">Engagement score</h2>
+            <div class="score-display">
+              <span id="result-score">–</span><span class="score-max">/10</span>
+            </div>
+          </div>
+
+          <div class="card card-tone">
+            <h2 class="card-title">Tone</h2>
+            <p id="result-tone" class="tone-text">–</p>
+          </div>
+
+          <div class="card card-suggestions">
+            <h2 class="card-title">Suggestions</h2>
+            <ol id="result-suggestions" class="suggestions-list"></ol>
+          </div>
+
+          <div class="card card-improved">
+            <h2 class="card-title">
+              Improved version
+              <button id="btn-copy" class="btn-copy" type="button">Copy</button>
+            </h2>
+            <div id="result-improved" class="scroll-box"></div>
+          </div>
+
+        </div>
+
+        <button id="btn-reset" class="btn btn-secondary btn-block">Analyze another</button>
+      </section>
+
+    </main>
   </div>
 
-  <!-- CARD 2: SUMMARY -->
-  <div class="glass-card" id="card-summary">
-    <div class="card-header">
-      <div class="card-icon icon-blue">
-        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#0A84FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="21" y1="6" x2="3" y2="6"/><line x1="17" y1="12" x2="3" y2="12"/><line x1="13" y1="18" x2="3" y2="18"/>
-        </svg>
-      </div>
-      <div>
-        <div class="card-title">Summary</div>
-        <div class="card-desc">Key findings from your document</div>
-      </div>
-      <span class="pill pill-proc" id="pill-sum-proc"><span class="pill-dot blink"></span>Summarizing</span>
-      <span class="pill pill-done" id="pill-sum-done"><span class="pill-dot"></span>Done</span>
-    </div>
-    <div class="card-body">
-      <div class="output-empty" id="empty-summary">
-        <svg width="36" height="36" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="21" y1="6" x2="3" y2="6"/><line x1="17" y1="12" x2="3" y2="12"/><line x1="13" y1="18" x2="3" y2="18"/>
-        </svg>
-        <p>Your document summary will appear here.</p>
-      </div>
-      <div class="sum-callout" id="sum-callout"><p id="sum-hl"></p></div>
-      <div class="text-out" id="text-summary"></div>
-      <div class="output-foot" id="foot-summary">
-        <span class="wc" id="wc-summary"></span>
-        <button class="btn btn-ghost" onclick="copyEl('text-summary', this)" style="font-size:13px; padding:7px 16px;">
-          <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
-          </svg>
-          Copy
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- CARD 3: Q&A -->
-  <div class="glass-card" id="card-qa">
-    <div class="card-header">
-      <div class="card-icon icon-teal">
-        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#32ADE6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
-        </svg>
-      </div>
-      <div>
-        <div class="card-title">Ask the document</div>
-        <div class="card-desc">Semantic Q&A powered by LayoutLMv3</div>
-      </div>
-      <span class="pill pill-done show" id="pill-qa-ready" style="display:none;">
-        <span class="pill-dot"></span>Ready
-      </span>
-    </div>
-    <div class="card-body">
-
-      <div class="qa-locked" id="qa-locked">
-        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
-        </svg>
-        Analyze a document first to unlock Q&amp;A
-      </div>
-
-      <div class="qa-suggest" id="qa-suggest" style="display:none;">
-        <button class="qa-chip" onclick="askChip(this)">What is this document about?</button>
-        <button class="qa-chip" onclick="askChip(this)">What are the key conclusions?</button>
-        <button class="qa-chip" onclick="askChip(this)">Who is the intended audience?</button>
-        <button class="qa-chip" onclick="askChip(this)">List the main data points</button>
-      </div>
-
-      <div class="qa-messages" id="qa-messages"></div>
-
-      <div class="qa-input-row">
-        <textarea id="qa-input" class="qa-input" placeholder="Ask anything about the document…" rows="1" disabled></textarea>
-        <button class="btn-send" id="btn-send" disabled title="Send">
-          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
-          </svg>
-        </button>
-      </div>
-    </div>
-  </div>
-
-</main>
-
-<footer>
-  <p>DocDistill &nbsp;·&nbsp; Files are never stored. All processing happens in your session only.</p>
-</footer>
-
-<script src="main.js"></script>
+  <script src="main.js"></script>
 </body>
 </html>
