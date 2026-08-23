@@ -2,37 +2,15 @@ from pathlib import Path
 
 from pdf2image import convert_from_path
 
-from models.documents_type import DocumentType
-
-
 IMAGE_DIR = Path("converted_images")
-async def detect_document_type(
-    file_path: str
-):
-    suffix = Path(file_path).suffix.lower()
 
-    if suffix == ".pdf":
-        return DocumentType.PDF
-
-    elif suffix == ".docx":
-        return DocumentType.DOCX
-
-    elif suffix == ".pptx":
-        return DocumentType.PPTX
-
-    elif suffix == ".txt":
-        return DocumentType.TXT
-
-    elif suffix in [".png", ".jpg", ".jpeg"]:
-        return DocumentType.IMAGE
-
-    return DocumentType.UNSUPPORTED
 
 async def image_to_images(file_path: str):
     return [file_path]
 
+
 async def convert_pdf_to_images(file_path: str):
-    
+
     IMAGE_DIR.mkdir(
         exist_ok=True
     )

@@ -1,25 +1,14 @@
-from fastapi import UploadFile
-from services.converter_service import detect_document_type, image_to_images,convert_pdf_to_images
+from fastapi import APIRouter, UploadFile, File
+
+from services.pdf_service import image_to_images, convert_pdf_to_images
 from services.ocr_service import extract_layout, extract_layout_from_images
-from models.documents_type import DocumentType
-import uuid
-from pathlib import Path
+from utils.file_helpers import DocumentType, detect_document_type, save_file
 
-UPLOAD_DIR = Path("uploaded_files")
+router = APIRouter(
+    prefix="/documents",
+    tags=["Documents"]
+)
 
-
-async def save_file(file: UploadFile):
-    UPLOAD_DIR.mkdir(exist_ok=True)
-
-    unique_name = f"{uuid.uuid4()}_{file.filename}"
-    file_path = UPLOAD_DIR / unique_name
-
-    content = await file.read()
-
-    with open(file_path, "wb") as f:
-        f.write(content)
-
-    return str(file_path)
 
 async def process_document(file: UploadFile):
 
@@ -42,7 +31,7 @@ async def process_document(file: UploadFile):
 
     elif document_type == DocumentType.IMAGE:
         image_paths = await image_to_images(saved_path)              #IMAGE IS AS IMAGE
-         
+
 
     #text= extract_text(image_paths)                                #EXTRACT TEXT FROM THE SINGLE IMAGE
 
@@ -60,3 +49,9 @@ async def process_document(file: UploadFile):
         "Image_path": image_paths,
         "Text": text
     }
+
+
+@router.post("/upload")
+async def upload_document(
+    file: UploadFile = File(...)):
+    return await process_document(file)

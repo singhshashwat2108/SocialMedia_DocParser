@@ -1,20 +1,17 @@
-# Virtual Environment
-.venv/
-
 # Python
 __pycache__/
 *.pyc
+.venv/
 
-# Uploaded files
+# Environment
+.env
+
+# Uploaded files / generated output
 uploaded_files/
-
-# Converted images
 converted_images/
 
-# OCR models
+# OCR / model caches
 easyocr_models/
-
-#Model cache
 Model_cache/
 
 # IDE

@@ -5,15 +5,5 @@ python-multipart
 pdf2image
 Pillow
 
-paddleocr
-tensorflow
-
-numpy==1.26.4
-opencv-python
-
+easyocr
 pydantic
-
-transformers
-torch
-
-python-dotenv
