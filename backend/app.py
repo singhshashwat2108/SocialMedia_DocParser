@@ -10,6 +10,7 @@ from backend.routes.upload import router as upload_router
 from backend.routes.analyze import router as analyze_router
 
 logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
@@ -32,9 +33,18 @@ def health_check():
 FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
 
 
+@app.on_event("startup")
+async def check_frontend_dir():
+    if FRONTEND_DIR.exists():
+        files = [f.name for f in FRONTEND_DIR.iterdir()]
+        logger.info("Frontend directory found at %s: %s", FRONTEND_DIR, files)
+    else:
+        logger.error("Frontend directory NOT found at %s", FRONTEND_DIR)
+
+
 @app.get("/")
 async def root():
     return FileResponse(str(FRONTEND_DIR / "index.html"))
 
 
-app.mount("/", StaticFiles(directory=str(FRONTEND_DIR)), name="frontend")
+app.mount("/static", StaticFiles(directory=str(FRONTEND_DIR)), name="static")
