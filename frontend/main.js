@@ -11,9 +11,13 @@ const screens = {
   results: document.getElementById('screen-results'),
 };
 
+const STATUS_TEXT = { upload: 'Ready', loading: 'Processing', error: 'Fault', results: 'Complete' };
+const statusRight = document.getElementById('status-right');
+
 function showScreen(name) {
   Object.values(screens).forEach((el) => { el.hidden = true; });
   screens[name].hidden = false;
+  if (statusRight) statusRight.textContent = STATUS_TEXT[name] || '';
 }
 
 const dropzone = document.getElementById('dropzone');
@@ -124,26 +128,6 @@ function wait(ms) {
 }
 
 const MIN_STEP_DURATION = 4000;
-const screenLoadingEl = document.getElementById('screen-loading');
-const ANIM_STAGES = ['upload', 'extract', 'analyze'];
-let animCycleTimer = null;
-
-function startAnimCycle() {
-  stopAnimCycle();
-  let i = 0;
-  screenLoadingEl.dataset.anim = ANIM_STAGES[i];
-  animCycleTimer = setInterval(() => {
-    i = (i + 1) % ANIM_STAGES.length;
-    screenLoadingEl.dataset.anim = ANIM_STAGES[i];
-  }, MIN_STEP_DURATION);
-}
-
-function stopAnimCycle() {
-  if (animCycleTimer) {
-    clearInterval(animCycleTimer);
-    animCycleTimer = null;
-  }
-}
 
 async function extractErrorMessage(response) {
   try {
@@ -159,7 +143,6 @@ async function runAnalysis() {
 
   showScreen('loading');
   resetSteps();
-  startAnimCycle();
 
   let settled = false;
   let result = null;
@@ -212,7 +195,6 @@ async function runAnalysis() {
     setStep(stepEl, 'step-done');
   }
 
-  stopAnimCycle();
   await pipeline;
 
   if (error) {
@@ -258,5 +240,50 @@ btnReset.addEventListener('click', () => {
   clearUploadError();
   showScreen('upload');
 });
+
+const dustLayer = document.getElementById('dust-layer');
+const DUST_COUNT = 30;
+const DUST_COLORS = ['var(--rust)', 'var(--cyan)'];
+
+function renderDust(count) {
+  dustLayer.innerHTML = '';
+  for (let i = 0; i < count; i++) {
+    const dot = document.createElement('span');
+    dot.className = 'dust';
+    const x = (Math.random() * 100).toFixed(1);
+    const delay = (Math.random() * 18).toFixed(1);
+    const dur = (22 + Math.random() * 18).toFixed(1);
+    const size = (2 + Math.random() * 2).toFixed(1);
+    const color = DUST_COLORS[Math.random() < 0.6 ? 0 : 1];
+    dot.style.cssText = `--x:${x}%;--delay:${delay}s;--dur:${dur}s;--size:${size}px;--c:${color}`;
+    dustLayer.appendChild(dot);
+  }
+}
+
+renderDust(DUST_COUNT);
+
+const scrim = document.getElementById('scrim');
+const expandButtons = [document.getElementById('btn-expand-text'), document.getElementById('btn-expand-improved')];
+
+function collapseAll() {
+  document.querySelectorAll('.card.expanded').forEach((c) => c.classList.remove('expanded'));
+  expandButtons.forEach((btn) => { btn.textContent = 'Expand'; });
+  scrim.hidden = true;
+}
+
+expandButtons.forEach((btn) => {
+  btn.addEventListener('click', () => {
+    const card = document.getElementById(btn.dataset.target);
+    const willExpand = !card.classList.contains('expanded');
+    collapseAll();
+    if (willExpand) {
+      card.classList.add('expanded');
+      btn.textContent = 'Collapse';
+      scrim.hidden = false;
+    }
+  });
+});
+
+scrim.addEventListener('click', collapseAll);
 
 showScreen('upload');
