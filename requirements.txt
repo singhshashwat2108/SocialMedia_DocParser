@@ -4,6 +4,7 @@ python-multipart
 
 pdf2image
 Pillow
+PyMuPDF
 
 easyocr
 pydantic

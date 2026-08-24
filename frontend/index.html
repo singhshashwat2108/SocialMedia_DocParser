@@ -4,10 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Social Media Content Analyzer</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+
+  <div class="noise-overlay" aria-hidden="true"></div>
 
   <div class="app">
     <header class="app-header">
@@ -15,52 +18,65 @@
         <span class="logo-mark">S</span>
         <span class="logo-text">Social Media Content Analyzer</span>
       </div>
-      <p class="app-subtitle">Upload a post screenshot or PDF and get an instant AI engagement analysis.</p>
     </header>
 
     <main class="app-main">
 
       <!-- UPLOAD SCREEN -->
-      <section id="screen-upload" class="screen">
-        <div id="dropzone" class="dropzone" tabindex="0">
-          <input type="file" id="file-input" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/png,image/jpeg,image/webp" hidden />
-          <div class="dropzone-icon">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-              <polyline points="17 8 12 3 7 8" />
-              <line x1="12" y1="3" x2="12" y2="15" />
-            </svg>
-          </div>
-          <p class="dropzone-text">Drop your PDF or image here, or <span class="dropzone-link">click to browse</span></p>
-          <p class="dropzone-hint">PDF, JPG, PNG, WEBP · up to 10MB</p>
-        </div>
-
-        <div id="file-chosen" class="file-chosen" hidden>
-          <div class="file-chosen-info">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-              <polyline points="14 2 14 8 20 8" />
-            </svg>
-            <span id="file-chosen-name" class="file-chosen-name"></span>
-          </div>
-          <div class="file-chosen-actions">
-            <button id="btn-clear" class="btn-icon" type="button" title="Remove file" aria-label="Remove file">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
+      <section id="screen-upload" class="stage">
+        <div class="stage-panel glass">
+          <div id="dropzone" class="dropzone" tabindex="0">
+            <input type="file" id="file-input" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/png,image/jpeg,image/webp" hidden />
+            <div class="dropzone-icon">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
               </svg>
-            </button>
+            </div>
+            <p class="dropzone-text">Drop your PDF or image here, or <span class="dropzone-link">click to browse</span></p>
+            <p class="dropzone-hint">PDF, JPG, PNG, WEBP · up to 10MB</p>
           </div>
+
+          <div id="file-chosen" class="file-chosen" hidden>
+            <div class="file-chosen-info">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+              </svg>
+              <span id="file-chosen-name" class="file-chosen-name"></span>
+            </div>
+            <div class="file-chosen-actions">
+              <button id="btn-clear" class="btn-icon" type="button" title="Remove file" aria-label="Remove file">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <p id="upload-error" class="error-text" hidden></p>
+
+          <button id="btn-analyze" class="btn btn-primary btn-block" type="button" disabled>Analyze</button>
         </div>
 
-        <p id="upload-error" class="error-text" hidden></p>
-
-        <button id="btn-analyze" class="btn btn-primary btn-block" type="button" disabled>Analyze</button>
+        <div class="stage-visual" aria-hidden="true">
+          <div class="visual-glow"></div>
+          <div class="doc-anim doc-anim--idle">
+            <div class="doc">
+              <span class="doc-fold"></span>
+              <span class="doc-line" style="width:60%"></span>
+              <span class="doc-line" style="width:80%"></span>
+              <span class="doc-line" style="width:45%"></span>
+            </div>
+          </div>
+        </div>
       </section>
 
       <!-- LOADING SCREEN -->
-      <section id="screen-loading" class="screen" hidden>
-        <div class="status-card">
+      <section id="screen-loading" class="stage" hidden>
+        <div class="stage-panel glass status-card">
           <div class="spinner" aria-hidden="true"></div>
           <ul class="steps">
             <li id="step-1" class="step">
@@ -77,12 +93,62 @@
             </li>
           </ul>
         </div>
+
+        <div class="stage-visual" aria-hidden="true">
+          <div class="visual-glow"></div>
+
+          <div class="doc-anim doc-anim--upload">
+            <div class="doc doc--beaming">
+              <span class="doc-fold"></span>
+              <span class="doc-line" style="width:60%"></span>
+              <span class="doc-line" style="width:80%"></span>
+              <span class="doc-line" style="width:45%"></span>
+              <span class="scan-beam"></span>
+            </div>
+            <div class="upload-track">
+              <span class="upload-dot"></span>
+              <span class="upload-dot"></span>
+              <span class="upload-dot"></span>
+            </div>
+          </div>
+
+          <div class="doc-anim doc-anim--extract">
+            <div class="doc">
+              <span class="doc-fold"></span>
+              <span class="doc-line" style="width:60%"></span>
+              <span class="doc-line" style="width:80%"></span>
+              <span class="doc-line" style="width:45%"></span>
+            </div>
+            <div class="extract-stream">
+              <span class="extract-chip"></span>
+              <span class="extract-chip"></span>
+              <span class="extract-chip"></span>
+            </div>
+          </div>
+
+          <div class="doc-anim doc-anim--analyze">
+            <div class="analyze-rings">
+              <span class="ring ring-1"></span>
+              <span class="ring ring-2"></span>
+              <span class="ring ring-3"></span>
+              <div class="doc doc--small">
+                <span class="doc-fold"></span>
+                <span class="doc-line" style="width:60%"></span>
+                <span class="doc-line" style="width:80%"></span>
+                <span class="doc-line" style="width:45%"></span>
+              </div>
+            </div>
+            <div class="analyze-orbit">
+              <span class="orbit-dot"></span>
+            </div>
+          </div>
+        </div>
       </section>
 
       <!-- ERROR SCREEN -->
-      <section id="screen-error" class="screen" hidden>
-        <div class="status-card error-card">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <section id="screen-error" class="stage" hidden>
+        <div class="stage-panel glass status-card error-card">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="10" />
             <line x1="12" y1="8" x2="12" y2="12" />
             <line x1="12" y1="16" x2="12.01" y2="16" />
@@ -90,35 +156,48 @@
           <p id="error-message">Something went wrong. Try again.</p>
           <button id="btn-retry" class="btn btn-primary" type="button">Retry</button>
         </div>
+
+        <div class="stage-visual" aria-hidden="true">
+          <div class="visual-glow visual-glow--error"></div>
+          <div class="doc-anim doc-anim--error">
+            <div class="doc doc--error">
+              <span class="doc-fold"></span>
+              <span class="doc-crack"></span>
+              <span class="doc-line" style="width:60%"></span>
+              <span class="doc-line" style="width:80%"></span>
+              <span class="doc-line" style="width:45%"></span>
+            </div>
+          </div>
+        </div>
       </section>
 
       <!-- RESULTS SCREEN -->
-      <section id="screen-results" class="screen" hidden>
+      <section id="screen-results" class="screen results-screen" hidden>
         <div class="results-grid">
 
-          <div class="card card-text">
+          <div class="card card-text glass">
             <h2 class="card-title">Extracted text</h2>
             <div id="result-text" class="scroll-box"></div>
           </div>
 
-          <div class="card card-score">
+          <div class="card card-score glass">
             <h2 class="card-title">Engagement score</h2>
             <div class="score-display">
               <span id="result-score">–</span><span class="score-max">/10</span>
             </div>
           </div>
 
-          <div class="card card-tone">
+          <div class="card card-tone glass">
             <h2 class="card-title">Tone</h2>
             <p id="result-tone" class="tone-text">–</p>
           </div>
 
-          <div class="card card-suggestions">
+          <div class="card card-suggestions glass">
             <h2 class="card-title">Suggestions</h2>
             <ol id="result-suggestions" class="suggestions-list"></ol>
           </div>
 
-          <div class="card card-improved">
+          <div class="card card-improved glass">
             <h2 class="card-title">
               Improved version
               <button id="btn-copy" class="btn-copy" type="button">Copy</button>
