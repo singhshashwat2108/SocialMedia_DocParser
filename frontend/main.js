@@ -119,6 +119,32 @@ function resetSteps() {
   [step1, step2, step3].forEach((s) => setStep(s, null));
 }
 
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+const MIN_STEP_DURATION = 4000;
+const screenLoadingEl = document.getElementById('screen-loading');
+const ANIM_STAGES = ['upload', 'extract', 'analyze'];
+let animCycleTimer = null;
+
+function startAnimCycle() {
+  stopAnimCycle();
+  let i = 0;
+  screenLoadingEl.dataset.anim = ANIM_STAGES[i];
+  animCycleTimer = setInterval(() => {
+    i = (i + 1) % ANIM_STAGES.length;
+    screenLoadingEl.dataset.anim = ANIM_STAGES[i];
+  }, MIN_STEP_DURATION);
+}
+
+function stopAnimCycle() {
+  if (animCycleTimer) {
+    clearInterval(animCycleTimer);
+    animCycleTimer = null;
+  }
+}
+
 async function extractErrorMessage(response) {
   try {
     const body = await response.json();
@@ -133,49 +159,70 @@ async function runAnalysis() {
 
   showScreen('loading');
   resetSteps();
-  setStep(step1, 'step-active');
+  startAnimCycle();
 
-  try {
-    const formData = new FormData();
-    formData.append('file', selectedFile);
+  let settled = false;
+  let result = null;
+  let error = null;
 
-    const uploadResponse = await fetch(UPLOAD_ENDPOINT, {
-      method: 'POST',
-      body: formData,
-    });
+  const pipeline = (async () => {
+    try {
+      const formData = new FormData();
+      formData.append('file', selectedFile);
 
-    if (!uploadResponse.ok) {
-      throw new Error(await extractErrorMessage(uploadResponse));
+      const uploadResponse = await fetch(UPLOAD_ENDPOINT, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error(await extractErrorMessage(uploadResponse));
+      }
+
+      const uploadData = await uploadResponse.json();
+      const extractedText = uploadData.text || '';
+
+      const analyzeResponse = await fetch(ANALYZE_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: extractedText }),
+      });
+
+      if (!analyzeResponse.ok) {
+        throw new Error(await extractErrorMessage(analyzeResponse));
+      }
+
+      const analysis = await analyzeResponse.json();
+      result = { extractedText, analysis };
+    } catch (err) {
+      error = err;
+    } finally {
+      settled = true;
     }
+  })();
 
-    setStep(step1, 'step-done');
-    setStep(step2, 'step-active');
+  const steps = [step1, step2, step3];
+  for (let i = 0; i < steps.length; i++) {
+    const stepEl = steps[i];
+    const isLast = i === steps.length - 1;
+    setStep(stepEl, 'step-active');
+    do {
+      await Promise.race([pipeline, wait(MIN_STEP_DURATION)]);
+    } while (isLast && !settled);
+    setStep(stepEl, 'step-done');
+  }
 
-    const uploadData = await uploadResponse.json();
-    const extractedText = uploadData.text || '';
+  stopAnimCycle();
+  await pipeline;
 
-    setStep(step2, 'step-done');
-    setStep(step3, 'step-active');
-
-    const analyzeResponse = await fetch(ANALYZE_ENDPOINT, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: extractedText }),
-    });
-
-    if (!analyzeResponse.ok) {
-      throw new Error(await extractErrorMessage(analyzeResponse));
-    }
-
-    const analysis = await analyzeResponse.json();
-    setStep(step3, 'step-done');
-
-    renderResults(extractedText, analysis);
-    showScreen('results');
-  } catch (err) {
+  if (error) {
     errorMessageEl.textContent = 'Something went wrong. Try again.';
     showScreen('error');
+    return;
   }
+
+  renderResults(result.extractedText, result.analysis);
+  showScreen('results');
 }
 
 function renderResults(text, analysis) {

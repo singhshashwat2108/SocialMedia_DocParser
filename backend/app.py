@@ -3,6 +3,7 @@ from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from backend.routes.upload import router as upload_router
@@ -29,4 +30,11 @@ def health_check():
 
 
 FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
-app.mount("/", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")
+
+
+@app.get("/")
+async def root():
+    return FileResponse(str(FRONTEND_DIR / "index.html"))
+
+
+app.mount("/", StaticFiles(directory=str(FRONTEND_DIR)), name="frontend")

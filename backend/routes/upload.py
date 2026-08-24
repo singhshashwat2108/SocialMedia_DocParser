@@ -32,8 +32,7 @@ def _ocr_images_to_text(image_paths):
     if not layout_result["success"]:
         raise HTTPException(status_code=500, detail=layout_result["error"])
 
-    pages = layout_result["data"]
-    text = "\n".join(word.text for page in pages for word in page)
+    text = layout_result["data"]["text"]
     return text, layout_result.get("truncated", False)
 
 

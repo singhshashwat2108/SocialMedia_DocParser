@@ -6,8 +6,8 @@ pdf2image
 Pillow
 PyMuPDF
 
-easyocr
+pytesseract
 pydantic
 
-google-generativeai
+google-genai
 python-dotenv

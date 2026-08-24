@@ -3,22 +3,14 @@ import time
 from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeoutError
 from pathlib import Path
 
-import easyocr
-from pydantic import BaseModel
+import pytesseract
+from PIL import Image
 
 logger = logging.getLogger(__name__)
-
-reader = easyocr.Reader(['en'])
 
 MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024
 ALLOWED_IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp"}
 OCR_TIMEOUT_SECONDS = 30
-
-
-class OCRWord(BaseModel):
-    text: str
-    bbox: list[list[float]]
-    confidence: float
 
 
 def _validate_image(image_path: str):
@@ -37,6 +29,11 @@ def _validate_image(image_path: str):
     return None
 
 
+def _run_tesseract(image_path: str) -> str:
+    with Image.open(image_path) as image:
+        return pytesseract.image_to_string(image)
+
+
 def extract_layout(image_path: str, timeout: float = OCR_TIMEOUT_SECONDS):
     error = _validate_image(image_path)
     if error:
@@ -46,16 +43,11 @@ def extract_layout(image_path: str, timeout: float = OCR_TIMEOUT_SECONDS):
     executor = ThreadPoolExecutor(max_workers=1)
 
     try:
-        future = executor.submit(reader.readtext, image_path)
-        result = future.result(timeout=timeout)
+        future = executor.submit(_run_tesseract, image_path)
+        text = future.result(timeout=timeout)
 
-        words = [
-            OCRWord(text=text, bbox=bbox, confidence=float(confidence))
-            for bbox, text, confidence in result
-        ]
-
-        logger.info("Extracted %d word(s) from %s", len(words), image_path)
-        return {"success": True, "data": words}
+        logger.info("Extracted %d char(s) from %s", len(text), image_path)
+        return {"success": True, "data": text}
 
     except FutureTimeoutError:
         logger.warning("OCR timed out after %ss for %s", timeout, image_path)
@@ -75,12 +67,12 @@ def extract_layout_from_images(image_paths: list[str], timeout: float = OCR_TIME
     """Run OCR over each page, bounded by an overall time budget.
 
     If the budget runs out partway through, this stops early and returns
-    whatever pages were already extracted instead of hanging or failing.
+    whatever text was already extracted instead of hanging or failing.
     """
     if not image_paths:
         return {"success": False, "error": "No images provided for OCR"}
 
-    layouts = []
+    texts = []
     truncated = False
     start = time.monotonic()
 
@@ -90,7 +82,7 @@ def extract_layout_from_images(image_paths: list[str], timeout: float = OCR_TIME
         if remaining <= 0:
             logger.warning(
                 "OCR time budget (%ss) exhausted after %d/%d page(s); returning partial results",
-                timeout, len(layouts), len(image_paths),
+                timeout, len(texts), len(image_paths),
             )
             truncated = True
             break
@@ -98,15 +90,16 @@ def extract_layout_from_images(image_paths: list[str], timeout: float = OCR_TIME
         result = extract_layout(image_path, timeout=remaining)
 
         if result["success"]:
-            layouts.append(result["data"])
+            texts.append(result["data"])
         elif result.get("timed_out"):
             logger.warning(
                 "OCR timed out on %s; returning partial results from %d/%d page(s)",
-                image_path, len(layouts), len(image_paths),
+                image_path, len(texts), len(image_paths),
             )
             truncated = True
             break
         else:
             logger.warning("Skipping page %s after OCR error: %s", image_path, result["error"])
 
-    return {"success": True, "data": layouts, "truncated": truncated}
+    combined_text = "\n".join(t.strip() for t in texts if t.strip())
+    return {"success": True, "data": {"text": combined_text}, "truncated": truncated}

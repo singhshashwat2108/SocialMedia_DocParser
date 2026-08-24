@@ -2,7 +2,7 @@ import json
 import logging
 import os
 
-import google.generativeai as genai
+from google import genai
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -11,10 +11,9 @@ logger = logging.getLogger(__name__)
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
-if GEMINI_API_KEY:
-    genai.configure(api_key=GEMINI_API_KEY)
+client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
 
-MODEL_NAME = "gemini-1.5-flash"
+MODEL_NAME = "gemini-3.6-flash"
 
 ANALYSIS_PROMPT_TEMPLATE = """You are analyzing a social media post. Given the text below, return ONLY raw JSON (no markdown, no code fences, no commentary) with exactly this shape:
 
@@ -48,9 +47,11 @@ def analyze_social_content(text: str):
         return {"success": False, "error": "GEMINI_API_KEY is not configured"}
 
     try:
-        model = genai.GenerativeModel(MODEL_NAME)
         prompt = ANALYSIS_PROMPT_TEMPLATE.format(text=text)
-        response = model.generate_content(prompt)
+        response = client.models.generate_content(
+            model=MODEL_NAME,
+            contents=prompt,
+        )
 
         raw = _strip_markdown_fence(response.text)
         analysis = json.loads(raw)
